@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paririmbon MBG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F2E9D8;
+    --paper-dark:#E8DCC1;
+    --paper-darker:#DED0AE;
+    --ink:#22303F;
+    --ink-soft:#5B6B7A;
+    --gold:#A9782E;
+    --gold-deep:#8A5F1F;
+    --green:#3F7D58;
+    --green-bg:#E4EFE6;
+    --rust:#A6462F;
+    --rust-bg:#F3E2DC;
+    --rule:#C9BBA0;
+    --stitch:#8B7355;
+    --shadow: 0 1px 2px rgba(34,48,63,0.08), 0 2px 8px rgba(34,48,63,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; min-height:100%;}
+  body{
+    font-family:'IBM Plex Sans', sans-serif;
+    color:var(--ink);
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 34px, rgba(139,115,85,0.07) 35px),
+      radial-gradient(ellipse at top left, #F7F0E1 0%, var(--paper) 55%, var(--paper-dark) 100%);
+    min-height:100vh;
+    padding:0 0 40px 0;
+  }
+  #prb-root{ position:relative; min-height:100vh; }
+  .prb-spine{
+    position:absolute; top:0; left:0; bottom:0; width:26px;
+    background: linear-gradient(90deg, var(--stitch), #7A6248 60%, transparent);
+    opacity:0.9;
+  }
+  .prb-spine::before{
+    content:'';
+    position:absolute; top:18px; bottom:18px; left:12px; width:1px;
+    background-image: repeating-linear-gradient(0deg, #F2E9D8 0 6px, transparent 6px 14px);
+  }
+  .prb-wrap{
+    max-width:980px; margin:0 auto; padding:36px 28px 0 46px;
+  }
+  .prb-header{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+    border-bottom: 2px solid var(--ink); padding-bottom:18px; margin-bottom:22px;
+  }
+  .prb-title-block .eyebrow{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--gold-deep); margin:0 0 6px 0;
+  }
+  .prb-title-block h1{
+    font-family:'Fraunces', serif; font-weight:600; font-size:40px; line-height:1;
+    margin:0; color:var(--ink); letter-spacing:-0.01em;
+  }
+  .prb-title-block .sub{
+    font-size:13px; color:var(--ink-soft); margin-top:6px;
+  }
+  .prb-seal{
+    width:74px; height:74px; border-radius:50%;
+    border:2px solid var(--rust); color:var(--rust);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:'Fraunces', serif; font-size:10px; line-height:1.15; letter-spacing:.03em;
+    transform:rotate(-8deg); flex:0 0 auto;
+    box-shadow: inset 0 0 0 1px rgba(166,70,47,0.25);
+  }
+
+  .prb-tabs{
+    display:flex; gap:6px; margin-bottom:20px;
+  }
+  .prb-tab{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; letter-spacing:.04em;
+    padding:9px 16px; border:1px solid var(--rule); border-bottom:none;
+    background:var(--paper-dark); color:var(--ink-soft); cursor:pointer;
+    border-radius:6px 6px 0 0; transition:all .15s ease;
+  }
+  .prb-tab.active{ background:var(--paper); color:var(--ink); font-weight:600; border-color:var(--ink);}
+  .prb-tab:hover:not(.active){ color:var(--ink); }
+
+  .prb-panel{
+    background:var(--paper); border:1px solid var(--ink); border-radius:0 8px 8px 8px;
+    padding:24px; box-shadow:var(--shadow);
+  }
+
+  .prb-banner{
+    border:1px solid var(--rust); background:var(--rust-bg); color:var(--rust);
+    border-radius:8px; padding:12px 14px; margin-bottom:18px; font-size:13px; line-height:1.5;
+  }
+  .prb-banner code{ background:rgba(0,0,0,0.06); padding:1px 5px; border-radius:4px; font-family:'IBM Plex Mono', monospace; }
+  .prb-banner.loading{ border-color:var(--gold); background:var(--paper-dark); color:var(--ink-soft); }
+
+  .prb-stats{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:22px;
+  }
+  .prb-stat{
+    background:var(--paper-dark); border:1px solid var(--rule); border-radius:8px;
+    padding:12px 14px; position:relative;
+  }
+  .prb-stat .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft); margin-bottom:4px;}
+  .prb-stat .val{ font-family:'IBM Plex Mono', monospace; font-size:19px; font-weight:600; }
+  .prb-stat.income .val{ color:var(--green); }
+  .prb-stat.expense .val{ color:var(--rust); }
+  .prb-stat.net .val{ color:var(--ink); }
+  .prb-stat.net{ border-color:var(--gold); background:linear-gradient(135deg, var(--paper-dark), #F1E5C6); }
+
+  .prb-form{
+    display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:10px; margin-bottom:18px;
+    padding:16px; background:var(--paper-darker); border-radius:8px; border:1px dashed var(--rule);
+    align-items:start;
+  }
+  .prb-form .catatan-field{ grid-column: span 6; }
+  .prb-field{ min-width:0; display:flex; flex-direction:column; }
+  .prb-field label{
+    display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft);
+    margin-bottom:4px; height:26px; line-height:1.15;
+  }
+  .prb-field input{
+    box-sizing:border-box; width:100%; height:38px; padding:0 9px; border:1px solid var(--rule); border-radius:5px;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; background:#FBF6EA; color:var(--ink);
+  }
+  .prb-field input:focus{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold);}
+  .prb-field input[readonly]{ background:var(--paper-dark); color:var(--gold-deep); font-weight:600; cursor:not-allowed; }
+  .prb-field .hint{ font-size:10px; color:var(--ink-soft); margin-top:3px; }
+  .prb-form-actions{ grid-column: span 6; display:flex; gap:10px; justify-content:flex-end; align-items:center; margin-top:2px;}
+  .prb-form-status{ font-size:12px; color:var(--ink-soft); margin-right:auto; font-family:'IBM Plex Mono', monospace; }
+
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:600;
+    padding:9px 18px; border-radius:6px; border:1px solid var(--ink); cursor:pointer;
+    transition: transform .1s ease;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .btn-primary{ background:var(--ink); color:var(--paper); }
+  .btn-primary:hover{ background:#152230; }
+  .btn-ghost{ background:transparent; color:var(--ink); }
+  .btn-ghost:hover{ background:var(--paper-dark); }
+  .btn-export{ background:var(--gold); border-color:var(--gold-deep); color:#fff; }
+  .btn-export:hover{ background:var(--gold-deep); }
+  .btn-danger-text{ background:none; border:none; color:var(--rust); font-size:12px; cursor:pointer; text-decoration:underline; padding:0;}
+
+  table.prb-table{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.prb-table thead th{
+    text-align:left; font-family:'IBM Plex Mono', monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--ink-soft); border-bottom:2px solid var(--ink); padding:8px 8px;
+  }
+  table.prb-table tbody td{ padding:9px 8px; border-bottom:1px solid var(--rule); vertical-align:top;}
+  table.prb-table tbody tr:hover{ background:rgba(169,120,46,0.07); }
+  .num{ font-family:'IBM Plex Mono', monospace; text-align:right; white-space:nowrap; }
+  .num.pos{ color:var(--green); }
+  .num.neg{ color:var(--rust); }
+  .catatan-cell{ color:var(--ink-soft); font-size:12px; max-width:160px; }
+  .row-actions{ white-space:nowrap; }
+
+  .prb-empty{ text-align:center; padding:40px 12px; color:var(--ink-soft); }
+  .prb-empty .glyph{ font-family:'Fraunces', serif; font-size:32px; color:var(--gold); margin-bottom:8px; }
+
+  .period-card{
+    border:1px solid var(--rule); border-radius:8px; padding:14px 16px; margin-bottom:12px; background:var(--paper-dark);
+  }
+  .period-card .period-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .period-card .period-title{ font-family:'Fraunces', serif; font-weight:600; font-size:16px; }
+  .period-card .period-count{ font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace;}
+  .period-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .period-grid .pg-item .lbl{ font-size:10px; text-transform:uppercase; color:var(--ink-soft); letter-spacing:.04em;}
+  .period-grid .pg-item .val{ font-family:'IBM Plex Mono', monospace; font-size:14px; font-weight:600; margin-top:2px;}
+  .bar-wrap{ height:6px; border-radius:3px; background:var(--rust-bg); overflow:hidden; margin-top:10px; }
+  .bar-fill{ height:100%; background:var(--green); }
+
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .toolbar h2{ font-family:'Fraunces', serif; font-size:18px; margin:0; }
+  .toolbar-actions{ display:flex; gap:8px; align-items:center; }
+
+  .prb-footer{
+    text-align:center; margin-top:30px; padding-top:16px; border-top:1px solid var(--rule);
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft); letter-spacing:.03em;
+  }
+
+  @media (max-width: 720px){
+    .prb-form{ grid-template-columns:repeat(2,1fr); }
+    .prb-form .catatan-field{ grid-column: span 2; }
+    .prb-form-actions{ grid-column: span 2; flex-wrap:wrap; }
+    .prb-stats{ grid-template-columns:repeat(2,1fr); }
+    .period-grid{ grid-template-columns:repeat(2,1fr); }
+    .prb-wrap{ padding:28px 14px 0 34px; }
+    table.prb-table{ font-size:11.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="prb-root">
+  <div class="prb-spine"></div>
+  <div class="prb-wrap">
+
+    <div class="prb-header">
+      <div class="prb-title-block">
+        <p class="eyebrow">Buku Kas &middot; Affiliate &amp; Iklan</p>
+        <h1>Paririmbon MBG</h1>
+        <p class="sub">Catatan pendapatan komisi, pengeluaran, dan budget iklan &mdash; tersimpan di Google Sheet</p>
+      </div>
+      <div class="prb-seal">SALDO<br/>BERSIH</div>
+    </div>
+
+    <div class="prb-tabs" id="prb-tabs">
+      <div class="prb-tab active" data-tab="harian">Harian</div>
+      <div class="prb-tab" data-tab="mingguan">Per 7 Hari</div>
+      <div class="prb-tab" data-tab="bulanan">Per Bulan</div>
+    </div>
+
+    <div class="prb-panel">
+
+      <div id="prb-banner-wrap"></div>
+
+      <div class="prb-stats" id="prb-stats"></div>
+
+      <div id="prb-view-harian" class="prb-view">
+        <div class="prb-form" id="prb-form">
+          <div class="prb-field"><label>Tanggal</label><input type="date" id="f-tanggal"/></div>
+          <div class="prb-field"><label>Pendapatan (komisi)</label><input type="number" id="f-pendapatan" placeholder="0" min="0"/></div>
+          <div class="prb-field"><label>Pengeluaran</label><input type="number" id="f-pengeluaran" placeholder="0" min="0"/></div>
+          <div class="prb-field"><label>Budget iklan (akun biasa)</label><input type="number" id="f-budgetbiasa" placeholder="0" min="0"/></div>
+          <div class="prb-field"><label>Budget iklan (akun WL)</label><input type="number" id="f-budgetwl" placeholder="0" min="0"/></div>
+          <div class="prb-field"><label>Spend real</label><input type="number" id="f-spendreal" placeholder="0" readonly/><span class="hint">otomatis: pengeluaran + budget iklan</span></div>
+          <div class="prb-field catatan-field"><label>Catatan</label><input type="text" id="f-catatan" placeholder="opsional"/></div>
+          <div class="prb-form-actions">
+            <span class="prb-form-status" id="f-status"></span>
+            <button class="btn btn-ghost" id="f-cancel" style="display:none;">Batal edit</button>
+            <button class="btn btn-primary" id="f-save">Simpan catatan</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <h2>Semua catatan</h2>
+          <div class="toolbar-actions">
+            <button class="btn btn-ghost" id="btn-refresh">Muat ulang</button>
+            <button class="btn btn-export" id="btn-export">Export CSV</button>
+          </div>
+        </div>
+        <div id="prb-table-wrap"></div>
+      </div>
+
+      <div id="prb-view-mingguan" class="prb-view" style="display:none;">
+        <div class="toolbar"><h2>Rekap per 7 hari</h2><button class="btn btn-export" id="btn-export-week">Export CSV</button></div>
+        <div id="prb-week-wrap"></div>
+      </div>
+
+      <div id="prb-view-bulanan" class="prb-view" style="display:none;">
+        <div class="toolbar"><h2>Rekap per bulan</h2><button class="btn btn-export" id="btn-export-month">Export CSV</button></div>
+        <div id="prb-month-wrap"></div>
+      </div>
+
+    </div>
+
+    <div class="prb-footer">© 2026 Claude X indraGod777☮︎</div>
+  </div>
+</div>
+
+<script>
+/* ====================================================================
+   KONFIGURASI BACKEND (Google Sheet lewat Google Apps Script)
+   1. Ikuti README.md untuk deploy Apps Script sebagai Web App.
+   2. Tempel URL Web App kamu di API_URL di bawah ini.
+   3. API_KEY harus SAMA PERSIS dengan SECRET di apps-script/Code.gs
+   ==================================================================== */
+const CONFIG = {
+  API_URL: 'GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT', // contoh: https://script.google.com/macros/s/xxxxx/exec
+  API_KEY: 'GANTI_DENGAN_KODE_RAHASIA',             // harus sama dengan SECRET di Code.gs
+};
+
+(function(){
+  let entries = [];
+  let editingId = null;
+  let apiReady = false;
+
+  const $ = (sel, root) => (root||document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root||document).querySelectorAll(sel));
+
+  const IDR = n => 'Rp' + Math.round(n||0).toLocaleString('id-ID');
+  const numOr0 = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+
+  const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  function fmtDateShort(dstr){
+    if(!dstr) return '-';
+    const d = new Date(dstr + 'T00:00:00');
+    if(isNaN(d)) return dstr;
+    return d.getDate() + ' ' + MONTHS_ID[d.getMonth()].slice(0,3) + ' ' + d.getFullYear();
+  }
+
+  function computeRow(e){
+    // Spend Real = pengeluaran + budget iklan (akun biasa) + budget iklan (akun WL) -- dihitung otomatis
+    const totalBudgetIklan = numOr0(e.budgetBiasa) + numOr0(e.budgetWL);
+    const spendReal = numOr0(e.pengeluaran) + totalBudgetIklan;
+    const bersih = numOr0(e.pendapatan) - spendReal;
+    return { totalBudgetIklan, spendReal, bersih };
+  }
+
+  function mondayOf(dateObj){
+    const d = new Date(dateObj);
+    const day = d.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    d.setDate(d.getDate() + diff);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+  function fmtISO(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  // ---------- Backend (Google Sheet via Apps Script) ----------
+  function isConfigured(){
+    return CONFIG.API_URL && !CONFIG.API_URL.includes('GANTI_DENGAN') &&
+           CONFIG.API_KEY && !CONFIG.API_KEY.includes('GANTI_DENGAN');
+  }
+
+  function renderBanner(kind, html){
+    const wrap = $('#prb-banner-wrap');
+    if(!kind){ wrap.innerHTML = ''; return; }
+    wrap.innerHTML = `<div class="prb-banner ${kind==='loading'?'loading':''}">${html}</div>`;
+  }
+
+  async function apiList(){
+    const url = CONFIG.API_URL + '?key=' + encodeURIComponent(CONFIG.API_KEY);
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data.entries || [];
+  }
+
+  async function apiWrite(action, payload){
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari CORS preflight
+      body: JSON.stringify({ key: CONFIG.API_KEY, action, ...payload }),
+    });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data;
+  }
+
+  function normalize(raw){
+    return {
+      id: String(raw.id),
+      tanggal: String(raw.tanggal).slice(0,10),
+      pendapatan: numOr0(raw.pendapatan),
+      pengeluaran: numOr0(raw.pengeluaran),
+      budgetBiasa: numOr0(raw.budgetBiasa),
+      budgetWL: numOr0(raw.budgetWL),
+      catatan: raw.catatan || '',
+    };
+  }
+
+  async function loadEntries(){
+    if(!isConfigured()){
+      renderBanner('error', `Backend belum disambungkan. Buka <code>index.html</code>, isi <code>CONFIG.API_URL</code> dan <code>CONFIG.API_KEY</code> di bagian atas script sesuai langkah di <code>README.md</code>.`);
+      entries = [];
+      apiReady = false;
+      return;
+    }
+    renderBanner('loading', 'Memuat data dari Google Sheet&hellip;');
+    try{
+      const raw = await apiList();
+      entries = raw.map(normalize);
+      apiReady = true;
+      renderBanner(null, '');
+    }catch(err){
+      apiReady = false;
+      renderBanner('error', `Gagal memuat data: ${escapeHtml(err.message)}. Pastikan Web App sudah di-deploy sebagai "Anyone" dan URL/kode rahasia sudah benar.`);
+    }
+  }
+
+  // ---------- Rendering: stats ----------
+  function renderStats(){
+    let pendapatan=0, pengeluaran=0, spendIklan=0, bersih=0;
+    entries.forEach(e=>{
+      const c = computeRow(e);
+      pendapatan += numOr0(e.pendapatan);
+      pengeluaran += numOr0(e.pengeluaran);
+      spendIklan += c.totalBudgetIklan;
+      bersih += c.bersih;
+    });
+    $('#prb-stats').innerHTML = `
+      <div class="prb-stat income"><div class="lbl">Total pendapatan</div><div class="val">${IDR(pendapatan)}</div></div>
+      <div class="prb-stat expense"><div class="lbl">Total pengeluaran</div><div class="val">${IDR(pengeluaran)}</div></div>
+      <div class="prb-stat expense"><div class="lbl">Total spend iklan</div><div class="val">${IDR(spendIklan)}</div></div>
+      <div class="prb-stat net"><div class="lbl">Saldo bersih</div><div class="val">${IDR(bersih)}</div></div>
+    `;
+  }
+
+  // ---------- Rendering: table ----------
+  function renderTable(){
+    const wrap = $('#prb-table-wrap');
+    if(entries.length === 0){
+      wrap.innerHTML = `<div class="prb-empty"><div class="glyph">卷</div>Belum ada catatan.<br/>Isi form di atas untuk mulai mencatat.</div>`;
+      return;
+    }
+    const sorted = [...entries].sort((a,b)=> a.tanggal.localeCompare(b.tanggal) || String(a.id).localeCompare(String(b.id)));
+    let rows = sorted.map(e=>{
+      const c = computeRow(e);
+      return `<tr data-id="${e.id}">
+        <td>${fmtDateShort(e.tanggal)}</td>
+        <td class="num pos">${IDR(e.pendapatan)}</td>
+        <td class="num neg">${IDR(e.pengeluaran)}</td>
+        <td class="num">${IDR(e.budgetBiasa)}</td>
+        <td class="num">${IDR(e.budgetWL)}</td>
+        <td class="num neg">${IDR(c.spendReal)}</td>
+        <td class="num ${c.bersih>=0?'pos':'neg'}">${IDR(c.bersih)}</td>
+        <td class="catatan-cell">${e.catatan ? escapeHtml(e.catatan) : '&mdash;'}</td>
+        <td class="row-actions">
+          <button class="btn-danger-text" data-action="edit" data-id="${e.id}" style="color:var(--gold-deep);">ubah</button>
+          &nbsp;&middot;&nbsp;
+          <button class="btn-danger-text" data-action="delete" data-id="${e.id}">hapus</button>
+        </td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table class="prb-table">
+      <thead><tr>
+        <th>Tanggal</th><th>Pendapatan</th><th>Pengeluaran</th><th>Budget biasa</th><th>Budget WL</th><th>Spend real</th><th>Bersih</th><th>Catatan</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+    $$('#prb-table-wrap [data-action="edit"]').forEach(btn=>{
+      btn.addEventListener('click', ()=> startEdit(btn.dataset.id));
+    });
+    $$('#prb-table-wrap [data-action="delete"]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteEntry(btn.dataset.id));
+    });
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  // ---------- Grouping ----------
+  function groupByWeek(){
+    const map = new Map();
+    entries.forEach(e=>{
+      const d = new Date(e.tanggal + 'T00:00:00');
+      if(isNaN(d)) return;
+      const mon = mondayOf(d);
+      const key = fmtISO(mon);
+      if(!map.has(key)) map.set(key, { start: mon, items: [] });
+      map.get(key).items.push(e);
+    });
+    return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+  }
+
+  function groupByMonth(){
+    const map = new Map();
+    entries.forEach(e=>{
+      const d = new Date(e.tanggal + 'T00:00:00');
+      if(isNaN(d)) return;
+      const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      if(!map.has(key)) map.set(key, { year: d.getFullYear(), month: d.getMonth(), items: [] });
+      map.get(key).items.push(e);
+    });
+    return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+  }
+
+  function summarize(items){
+    let pendapatan=0, pengeluaran=0, budget=0, spendReal=0, bersih=0;
+    items.forEach(e=>{
+      const c = computeRow(e);
+      pendapatan += numOr0(e.pendapatan);
+      pengeluaran += numOr0(e.pengeluaran);
+      budget += c.totalBudgetIklan;
+      spendReal += c.spendReal;
+      bersih += c.bersih;
+    });
+    return { pendapatan, pengeluaran, budget, spendReal, bersih };
+  }
+
+  function periodCardHtml(title, count, s){
+    const ratio = s.pendapatan > 0 ? Math.min(100, Math.max(0,(s.bersih / s.pendapatan) * 100)) : 0;
+    return `<div class="period-card">
+      <div class="period-head">
+        <div class="period-title">${title}</div>
+        <div class="period-count">${count} catatan</div>
+      </div>
+      <div class="period-grid">
+        <div class="pg-item"><div class="lbl">Pendapatan</div><div class="val" style="color:var(--green)">${IDR(s.pendapatan)}</div></div>
+        <div class="pg-item"><div class="lbl">Pengeluaran</div><div class="val" style="color:var(--rust)">${IDR(s.pengeluaran)}</div></div>
+        <div class="pg-item"><div class="lbl">Budget iklan</div><div class="val">${IDR(s.budget)}</div></div>
+        <div class="pg-item"><div class="lbl">Spend real</div><div class="val" style="color:var(--rust)">${IDR(s.spendReal)}</div></div>
+        <div class="pg-item"><div class="lbl">Saldo bersih</div><div class="val" style="color:${s.bersih>=0?'var(--green)':'var(--rust)'}">${IDR(s.bersih)}</div></div>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${ratio}%;"></div></div>
+    </div>`;
+  }
+
+  function renderWeekly(){
+    const wrap = $('#prb-week-wrap');
+    const groups = groupByWeek();
+    if(groups.length === 0){
+      wrap.innerHTML = `<div class="prb-empty"><div class="glyph">卷</div>Belum ada data untuk direkap.</div>`;
+      return;
+    }
+    wrap.innerHTML = groups.map(([key, g])=>{
+      const end = new Date(g.start); end.setDate(end.getDate()+6);
+      const title = fmtDateShort(fmtISO(g.start)) + ' &ndash; ' + fmtDateShort(fmtISO(end));
+      const s = summarize(g.items);
+      return periodCardHtml(title, g.items.length, s);
+    }).join('');
+  }
+
+  function renderMonthly(){
+    const wrap = $('#prb-month-wrap');
+    const groups = groupByMonth();
+    if(groups.length === 0){
+      wrap.innerHTML = `<div class="prb-empty"><div class="glyph">卷</div>Belum ada data untuk direkap.</div>`;
+      return;
+    }
+    wrap.innerHTML = groups.map(([key, g])=>{
+      const title = MONTHS_ID[g.month] + ' ' + g.year;
+      const s = summarize(g.items);
+      return periodCardHtml(title, g.items.length, s);
+    }).join('');
+  }
+
+  // ---------- Form actions ----------
+  function refreshSpendRealField(){
+    const total = numOr0($('#f-pengeluaran').value) + numOr0($('#f-budgetbiasa').value) + numOr0($('#f-budgetwl').value);
+    $('#f-spendreal').value = total;
+  }
+
+  function clearForm(){
+    $('#f-tanggal').value = new Date().toISOString().slice(0,10);
+    $('#f-pendapatan').value = '';
+    $('#f-pengeluaran').value = '';
+    $('#f-budgetbiasa').value = '';
+    $('#f-budgetwl').value = '';
+    $('#f-spendreal').value = 0;
+    $('#f-catatan').value = '';
+    editingId = null;
+    $('#f-cancel').style.display = 'none';
+    $('#f-save').textContent = 'Simpan catatan';
+    $('#f-status').textContent = '';
+  }
+
+  function startEdit(id){
+    const e = entries.find(x=>x.id===id);
+    if(!e) return;
+    editingId = id;
+    $('#f-tanggal').value = e.tanggal;
+    $('#f-pendapatan').value = e.pendapatan || '';
+    $('#f-pengeluaran').value = e.pengeluaran || '';
+    $('#f-budgetbiasa').value = e.budgetBiasa || '';
+    $('#f-budgetwl').value = e.budgetWL || '';
+    $('#f-catatan').value = e.catatan || '';
+    refreshSpendRealField();
+    $('#f-cancel').style.display = 'inline-block';
+    $('#f-save').textContent = 'Perbarui catatan';
+    $('#prb-form').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  async function deleteEntry(id){
+    if(!apiReady) return;
+    if(!confirm('Hapus catatan ini?')) return;
+    $('#f-status').textContent = 'Menghapus...';
+    try{
+      await apiWrite('delete', { id });
+      await loadEntries();
+      renderAll();
+    }catch(err){
+      alert('Gagal menghapus: ' + err.message);
+    }
+    $('#f-status').textContent = '';
+  }
+
+  async function saveForm(){
+    if(!apiReady){
+      alert('Backend belum disambungkan. Lihat pesan di atas dan README.md.');
+      return;
+    }
+    const tanggal = $('#f-tanggal').value;
+    if(!tanggal){ $('#f-tanggal').focus(); return; }
+    const pengeluaran = numOr0($('#f-pengeluaran').value);
+    const budgetBiasa = numOr0($('#f-budgetbiasa').value);
+    const budgetWL = numOr0($('#f-budgetwl').value);
+    const payload = {
+      tanggal,
+      pendapatan: numOr0($('#f-pendapatan').value),
+      pengeluaran,
+      budgetBiasa,
+      budgetWL,
+      catatan: $('#f-catatan').value.trim(),
+    };
+    $('#f-save').disabled = true;
+    $('#f-status').textContent = 'Menyimpan...';
+    try{
+      if(editingId){
+        await apiWrite('update', { id: editingId, ...payload });
+      } else {
+        await apiWrite('create', payload);
+      }
+      await loadEntries();
+      clearForm();
+      renderAll();
+    }catch(err){
+      alert('Gagal menyimpan: ' + err.message);
+      $('#f-status').textContent = '';
+    }
+    $('#f-save').disabled = false;
+  }
+
+  // ---------- Export ----------
+  function downloadCsv(filename, headerRow, rows){
+    const escapeCsv = v => {
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    };
+    const lines = [headerRow.map(escapeCsv).join(',')].concat(
+      rows.map(r => r.map(escapeCsv).join(','))
+    );
+    const csv = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportDaily(){
+    const sorted = [...entries].sort((a,b)=> a.tanggal.localeCompare(b.tanggal));
+    const rows = sorted.map(e=>{
+      const c = computeRow(e);
+      return [e.tanggal, e.pendapatan, e.pengeluaran, e.budgetBiasa, e.budgetWL, c.spendReal, c.bersih, e.catatan||''];
+    });
+    downloadCsv('paririmbon-mbg-harian.csv',
+      ['Tanggal','Pendapatan (komisi)','Pengeluaran','Budget iklan (akun biasa)','Budget iklan (akun WL)','Spend real','Saldo bersih','Catatan'],
+      rows);
+  }
+
+  function exportWeekly(){
+    const groups = groupByWeek().slice().reverse();
+    const rows = groups.map(([key,g])=>{
+      const end = new Date(g.start); end.setDate(end.getDate()+6);
+      const s = summarize(g.items);
+      return [fmtISO(g.start), fmtISO(end), g.items.length, s.pendapatan, s.pengeluaran, s.budget, s.spendReal, s.bersih];
+    });
+    downloadCsv('paririmbon-mbg-per-7-hari.csv',
+      ['Mulai','Selesai','Jumlah catatan','Pendapatan','Pengeluaran','Budget iklan','Spend real','Saldo bersih'],
+      rows);
+  }
+
+  function exportMonthly(){
+    const groups = groupByMonth().slice().reverse();
+    const rows = groups.map(([key,g])=>{
+      const s = summarize(g.items);
+      return [MONTHS_ID[g.month] + ' ' + g.year, g.items.length, s.pendapatan, s.pengeluaran, s.budget, s.spendReal, s.bersih];
+    });
+    downloadCsv('paririmbon-mbg-per-bulan.csv',
+      ['Bulan','Jumlah catatan','Pendapatan','Pengeluaran','Budget iklan','Spend real','Saldo bersih'],
+      rows);
+  }
+
+  // ---------- Tabs ----------
+  function switchTab(tab){
+    $$('.prb-tab').forEach(t=> t.classList.toggle('active', t.dataset.tab===tab));
+    $('#prb-view-harian').style.display = tab==='harian' ? '' : 'none';
+    $('#prb-view-mingguan').style.display = tab==='mingguan' ? '' : 'none';
+    $('#prb-view-bulanan').style.display = tab==='bulanan' ? '' : 'none';
+    if(tab==='mingguan') renderWeekly();
+    if(tab==='bulanan') renderMonthly();
+  }
+
+  function renderAll(){
+    renderStats();
+    renderTable();
+    const activeTab = $('.prb-tab.active').dataset.tab;
+    if(activeTab==='mingguan') renderWeekly();
+    if(activeTab==='bulanan') renderMonthly();
+  }
+
+  // ---------- Init ----------
+  async function init(){
+    clearForm();
+    await loadEntries();
+    renderAll();
+
+    $('#f-save').addEventListener('click', saveForm);
+    $('#f-cancel').addEventListener('click', clearForm);
+    ['#f-pengeluaran','#f-budgetbiasa','#f-budgetwl'].forEach(sel=>{
+      $(sel).addEventListener('input', refreshSpendRealField);
+    });
+    $('#btn-export').addEventListener('click', exportDaily);
+    $('#btn-export-week').addEventListener('click', exportWeekly);
+    $('#btn-export-month').addEventListener('click', exportMonthly);
+    $('#btn-refresh').addEventListener('click', async ()=>{
+      await loadEntries();
+      renderAll();
+    });
+    $$('.prb-tab').forEach(t=> t.addEventListener('click', ()=> switchTab(t.dataset.tab)));
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
